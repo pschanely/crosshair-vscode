@@ -1,3 +1,7 @@
+out/
+.idea/
+.vscode-test/
+
 # Logs
 logs
 *.log
