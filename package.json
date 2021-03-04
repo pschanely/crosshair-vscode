@@ -1,0 +1,87 @@
+{
+	"name": "crosshair-vscode",
+	"displayName": "crosshair-vscode",
+	"description": "Use crosshair to statically analyze Python code from within VS Code.",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.52.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onLanguage:python"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "crosshair-vscode.pick",
+				"title": "crosshair"
+			},
+			{
+				"command": "crosshair-vscode.check",
+				"title": "Check the current file with crosshair"
+			},
+			{
+				"command": "crosshair-vscode.check-at",
+				"title": "Check the function under the caret with crosshair"
+			},
+			{
+				"command": "crosshair-vscode.watch",
+				"title": "Check continuously the current file with crosshair"
+			},
+			{
+				"command": "crosshair-vscode.watch-at",
+				"title": "Check continuously the function under the caret with crosshair"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "resourceLangId == python",
+					"command": "crosshair-vscode.pick",
+					"group": "z_crosshair-vscode"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "crosshair-vscode.check",
+					"group": "z_crosshair-vscode"
+				},
+				{
+					"command": "crosshair-vscode.watch",
+					"group": "z_crosshair-vscode"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run check && npm run compile",
+		"compile": "tsc -p ./",
+		"check": "prettier --check src/ && eslint src --ext ts",
+		"fix": "prettier --write src/ && eslint src --ext ts --fix"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.3",
+		"@types/mocha": "^8.0.4",
+		"@types/node": "^12.11.7",
+		"@types/vscode": "^1.52.0",
+		"@typescript-eslint/eslint-plugin": "^4.9.0",
+		"@typescript-eslint/parser": "^4.9.0",
+		"eslint": "^7.20.0",
+		"eslint-config-prettier": "^8.1.0",
+		"eslint-config-standard": "^16.0.2",
+		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-promise": "^4.3.1",
+		"glob": "^7.1.6",
+		"mocha": "^8.1.3",
+		"prettier": "2.2.1",
+		"typescript": "^4.1.2",
+		"vscode-test": "^1.4.1"
+	},
+	"extensionDependencies": [
+		"ms-python.python"
+	]
+}
