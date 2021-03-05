@@ -1,6 +1,7 @@
 out/
 .idea/
 .vscode-test/
+crosshair-vscode*.vsix
 
 # Logs
 logs

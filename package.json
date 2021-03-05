@@ -3,6 +3,17 @@
 	"displayName": "crosshair-vscode",
 	"description": "Use crosshair to statically analyze Python code from within VS Code.",
 	"version": "0.0.1",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/mristin/crosshair-vscode"
+	},
+	"homepage": "https://github.com/mristin/crosshair-vscode",
+	"author": {
+		"name": "Marko Ristin",
+		"email": "marko@ristin.ch"
+	},
+    "publisher": "mristin",
 	"engines": {
 		"vscode": "^1.52.0"
 	},
