@@ -59,8 +59,10 @@
 	"scripts": {
 		"vscode:prepublish": "npm run check && npm run compile",
 		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
 		"check": "prettier --check src/ && eslint src --ext ts",
-		"fix": "prettier --write src/ && eslint src --ext ts --fix"
+		"fix": "prettier --write src/ && eslint src --ext ts --fix",
+		"pretest": "npm run compile && npm run check"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
