@@ -30,10 +30,6 @@
 			{
 				"command": "crosshair-vscode.watch",
 				"title": "Check continuously the current file with crosshair"
-			},
-			{
-				"command": "crosshair-vscode.watch-at",
-				"title": "Check continuously the function under the caret with crosshair"
 			}
 		],
 		"menus": {
@@ -46,11 +42,7 @@
 			],
 			"explorer/context": [
 				{
-					"command": "crosshair-vscode.check",
-					"group": "z_crosshair-vscode"
-				},
-				{
-					"command": "crosshair-vscode.watch",
+					"command": "crosshair-vscode.pick",
 					"group": "z_crosshair-vscode"
 				}
 			]
