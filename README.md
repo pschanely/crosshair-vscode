@@ -45,23 +45,26 @@ following [this link][crosshair-vscode].
 ## Usage
 
 The crosshair-vscode is automatically activated when you start your
-[VS Code][vscode] (and [ms-python.python[ms-python.python] is activated).
+[VS Code][vscode] (and [ms-python.python] is activated).
 
 You access it through the editor context pop-up menu:
 
-<!-- TODO: capture images after discussing with @pshanely -->
 <img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/editor-popup.png" width=400 alt="editor pop-up" />
 
 Or, alternatively, through the explorer pop-up menu:
 
 <img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/explorer-popup.png" width=400 alt="explorer pop-up" />
 
-You can also check or watch a folder by selecting it in the explorer:
+The quick pick dialogue will appear, allowing you to select the command that you want to
+execute:
 
-<img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/explorer-popup-folder.png" width=400 alt="explorer folder pop-up" />
+<img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/quick-pick.png" width=400 alt="quick pick" />
 
 The commands are executed in a terminal named "crosshair check" and
-"crosshair watch", respectively.
+"crosshair watch", respectively:
+
+<img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/terminal.png" width=400 alt="terminal" />
+
 (If a terminal with that name already exists, it will be closed first and then
 freshly re-opened.
 This is necessary so that we do not pollute your terminal space on many command
@@ -69,15 +72,25 @@ calls.)
 
 Following commands are provided.
 
-**crosshair check**.
+**check**.
 Run CrossHair to check the code statically.
 
 If you run it from the editor's pop-up menu, it will check the current file.
 
 If you run it from the explorer's pop-up menu, it will check the the selected
 item.
-This can be a file, but also a folder.
-If it is a folder, it will check all the Python files beneath it.
+This can be a single file, but also a directory.
+
+**check at**.
+Run CrossHair to check statically the function under caret.
+
+This command can only be executed from an editor.
+
+Please make sure that you enabled crosshair on the given function (*.g.*,
+see [section "Targeting" in crosshair docs] on how you can turn it of using comment 
+directives).
+
+[Targeting section in crosshair docs]: https://crosshair.readthedocs.io/en/latest/what_code_is_analyzed.html#targeting
 
 **crosshair watch**.
 Start CrossHair and check the code continuously, on every file change.
@@ -91,13 +104,22 @@ it will watch the selected file or folder, depending on what you selected.
 
 The extension defines the following commands:
 
-* `crosshair-vscode.check`. Check the file or folder. 
+* `crosshair-vscode.pick`. Show a quick pick that allows you to select a command
+  to execute.
+  
+  This is handy if you do not want to memorize individual commands, and want to set up
+  a single keyboard shortcut to invoke crosshair-vscode.
 
-   There is an optional argument indicating the path (to a file or a folder).
+* `crosshair-vscode.check`. Check the file. 
+
+   There is an optional argument indicating the path to a file.
    If no path is given, check the current active file in the editor.
-* `crosshair-vscode.watch`. Watch the file or folder.
 
-   There is an optional argument indicating the path (to a file or a folder).
+* `crosshair-vscode.check-at`. Check the function under the caret in the editor.
+
+* `crosshair-vscode.watch`. Watch the file and check with crosshair on changes.
+
+   There is an optional argument indicating the path to a file.
    If no path is given, watch the current active file in the editor.
    
 Please see [Section "Usage"](#Usage) for more details.
@@ -115,11 +137,15 @@ Please see [CONTRIBUTING.md] for how to help us with development of the extensio
 
 ## Versioning
 
-<!-- TODO: discuss with @pshanely -->
-TODO
+We follow a bit unusual semantic versioning schema:
+
+* X is the oldest supported major version of
+  [crosshair-tool],
+* Y is the minor version (new or modified features), and
+* Z is the patch version (only bug fixes).
 
 ## Release Notes
 
-### 1.0.0
+### 0.0.1
 
 Initial release of crosshair-vscode.
