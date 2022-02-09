@@ -2,6 +2,7 @@
 	"name": "crosshair-vscode",
 	"displayName": "crosshair-vscode",
 	"description": "Use crosshair to statically analyze Python code from within VS Code.",
+    "icon": "logo.png",
 	"version": "0.0.1",
 	"license": "MIT",
 	"repository": {
