@@ -32,7 +32,7 @@ following [this link][crosshair-vscode].
 [crosshair-tool]: https://pypi.org/project/crosshair-tool/
 [venv]: https://docs.python.org/3/tutorial/venv.html
 [vscode-venv]: https://code.visualstudio.com/docs/python/environments
-[crosshair-vscode]: https://marketplace.visualstudio.com/items?itemName=CrossHair.crosshair-vscode
+[crosshair-vscode]: https://marketplace.visualstudio.com/items?itemName=CrossHair.crosshair
 
 ## Usage
 

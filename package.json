@@ -1,5 +1,5 @@
 {
-	"name": "crosshair-vscode",
+	"name": "crosshair",
 	"displayName": "crosshair-vscode",
 	"description": "Use crosshair to statically analyze Python code from within VS Code.",
 	"version": "0.0.2",
