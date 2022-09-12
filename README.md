@@ -1,7 +1,5 @@
 # crosshair-vscode
 
-![Build-and-lint](https://github.com/mristin/icontract-hypothesis-vscode/workflows/Build-and-lint/badge.svg)
-
 Crosshair-vscode is an extension for [Visual Studio Code (VS Code)][vscode] that
 allows you to statically test your Python code using [CrossHair][crosshair-tool].
 
@@ -17,19 +15,13 @@ Use the Visual Studio marketplace to install the extension ms-python.python by
 following [this link][ms-python.python].
 
 **crosshair-tool**. The easiest way to install the package
-[crosshair-tool][crosshair-tool] is *via* pip3:
+[crosshair-tool][crosshair-tool] is to open the terminal tab and run pip3:
 
 ```
-pip3 insatll crosshair-tool
+pip3 install crosshair-tool
 ```
 
-If you use a [virtual environment][venv], make sure that you activate it
-beforehand so that the package [crosshair-tool][crosshair-tool] is
-installed in it (instead of globally).
-
-You have to [set up ms-python.python][vscode-venv] extension so that
-crosshair-vscode can access the package
-[[crosshair-tool][crosshair-tool].
+[crosshair-tool][crosshair-tool] must be installed in each Python environment that you wish to use. (the environment is displayed and can be changed in the status bar)
 
 **crosshair-vscode**.
 Use the Visual Studio marketplace to install the extension ms-python.python by
@@ -44,61 +36,23 @@ following [this link][crosshair-vscode].
 
 ## Usage
 
-The crosshair-vscode is automatically activated when you start your
-[VS Code][vscode] (and [ms-python.python] is activated).
+The extension can be accessed from the status bar. When editing Python files, you'll see a new item labeled "CH off" (or "CH on" if the background watcher is already running).
 
-You access it through the editor context pop-up menu:
+<img src="https://raw.githubusercontent.com/pschanely/crosshair-vscode/main/readme/status-bar-item.png" width=100 alt="status bar item" />
 
-<img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/editor-popup.png" width=400 alt="editor pop-up" />
+Click on this item to open a menu and perform various commands.
 
-Or, alternatively, through the explorer pop-up menu:
+<img src="https://raw.githubusercontent.com/pschanely/crosshair-vscode/main/readme/quick-pick.png" width=450 alt="crosshair menu" />
 
-<img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/explorer-popup.png" width=400 alt="explorer pop-up" />
+Most importantly, you'll want to start the background watcher; by default, it does not auto-start. Once started, CrossHair will attempt to detect contract counterexamples in the background. When it finds something, you'll see it highlighted like this:
 
-The quick pick dialogue will appear, allowing you to select the command that you want to
-execute:
+<img src="https://raw.githubusercontent.com/pschanely/crosshair-vscode/main/readme/example-error.png" width=550 alt="example crosshair error" />
 
-<img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/quick-pick.png" width=400 alt="quick pick" />
 
-The commands are executed in a terminal named "crosshair check" and
-"crosshair watch", respectively:
+NOTE: To reduce wasteful computation, the background watcher only checks contracts in files that are open. You may decide to leave some files open to ensure some contracts continue to be checked as you work.
 
-<img src="https://raw.githubusercontent.com/mristin/crosshair-vscode/main/readme/terminal.png" width=400 alt="terminal" />
+If you want to be even more targeted by just checking an individual file, use the "watch in terminal" command.
 
-(If a terminal with that name already exists, it will be closed first and then
-freshly re-opened.
-This is necessary so that we do not pollute your terminal space on many command
-calls.)
-
-Following commands are provided.
-
-**check**.
-Run CrossHair to check the code statically.
-
-If you run it from the editor's pop-up menu, it will check the current file.
-
-If you run it from the explorer's pop-up menu, it will check the the selected
-item.
-This can be a single file, but also a directory.
-
-**check at**.
-Run CrossHair to check statically the function under caret.
-
-This command can only be executed from an editor.
-
-Please make sure that you enabled crosshair on the given function (*.g.*,
-see [section "Targeting" in crosshair docs] on how you can turn it of using comment 
-directives).
-
-[Targeting section in crosshair docs]: https://crosshair.readthedocs.io/en/latest/what_code_is_analyzed.html#targeting
-
-**crosshair watch**.
-Start CrossHair and check the code continuously, on every file change.
-
-If you run it from the editor's pop-up menu, it will watch the current file.
-
-Analogously to `crosshair check`, if you run it from the explorer's pop-up menu,
-it will watch the selected file or folder, depending on what you selected.
 
 ## Commands
 
@@ -110,19 +64,21 @@ The extension defines the following commands:
   This is handy if you do not want to memorize individual commands, and want to set up
   a single keyboard shortcut to invoke crosshair-vscode.
 
-* `crosshair-vscode.check`. Check the file. 
+* `crosshair-vscode.start`. Start the background watcher process.
 
-   There is an optional argument indicating the path to a file.
-   If no path is given, check the current active file in the editor.
+* `crosshair-vscode.stop`. Start the background watcher process.
 
-* `crosshair-vscode.check-at`. Check the function under the caret in the editor.
-
-* `crosshair-vscode.watch`. Watch the file and check with crosshair on changes.
+* `crosshair-vscode.watch`. Open a new terminal watching a file with crosshair.
 
    There is an optional argument indicating the path to a file.
    If no path is given, watch the current active file in the editor.
-   
-Please see [Section "Usage"](#Usage) for more details.
+
+* `crosshair-vscode.gentests`. Produce tests for the function at the current cursor position.
+
+
+## Settings
+
+Search your VSCode settings for "crosshair" to see the options that you can configure. Here, you can do things like set project-specific contract types (icontract vs asserts) and change whether the background watcher automatically starts.
 
 ## Known Issues
 
@@ -134,6 +90,12 @@ This might cause racing conditions in some rare cases.
 ## Contributing
 
 Please see [CONTRIBUTING.md] for how to help us with development of the extension.
+
+## Credits
+
+This plugin was authored by
+[Marko Ristin](https://github.com/mristin)
+and is now maintained by [Phillip Schanely](https://github.com/pschanely).
 
 ## Versioning
 
@@ -149,3 +111,9 @@ We follow a bit unusual semantic versioning schema:
 ### 0.0.1
 
 Initial release of crosshair-vscode.
+
+### 0.0.2
+
+CrossHair now runs transparently in the background and highlights counterexamples directly in your code, just like a typechecker or linter would.
+You can stop or start CrossHair in the status bar.
+Some of the more specialized check commands have been removed, as background execution is the recommended way to use CrossHair.

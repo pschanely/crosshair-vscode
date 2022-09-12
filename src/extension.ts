@@ -1,57 +1,40 @@
 import * as vscode from 'vscode'
 import * as pathModule from 'path'
+import {
+  getInterpreterDetails,
+  initializePython,
+  onDidChangePythonInterpreter,
+} from './common/python'
+import {
+  LanguageClient,
+  LanguageClientOptions,
+  RevealOutputChannelOn,
+  ServerOptions,
+} from 'vscode-languageclient/node'
+import { Uri } from 'vscode'
 
-function getConfiguration(
-  section?: string,
-  document?: vscode.TextDocument
-): vscode.WorkspaceConfiguration {
-  // Adapted from:
-  // https://github.com/formulahendry/vscode-code-runner/blob/2bed9aeeabc1118a5f3d75e47bdbcfaf412765ed/src/utility.ts#L6
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 
-  if (document) {
-    return vscode.workspace.getConfiguration(section, document.uri)
-  } else {
-    return vscode.workspace.getConfiguration(section)
+function getCommandLineArguments(): string[] {
+  const contractKind = vscode.workspace
+    .getConfiguration('crosshair-vscode')
+    .get('contract_kind')
+  const args = []
+  if (contractKind !== 'default (PEP316, deal, or icontract)') {
+    args.push(`--analysis_kind=${contractKind}`)
   }
+  return args
 }
 
 async function inferPythonPath(
   document?: vscode.TextDocument
 ): Promise<string> {
-  const defaultPythonPath = 'python'
-
-  try {
-    const extension = vscode.extensions.getExtension('ms-python.python')
-    if (!extension) {
-      return defaultPythonPath
-    }
-
-    const usingNewInterpreterStorage =
-      extension.packageJSON?.featureFlags?.usingNewInterpreterStorage
-    if (usingNewInterpreterStorage) {
-      if (!extension.isActive) {
-        await extension.activate()
-      }
-      const pythonPath = extension.exports.settings
-        .getExecutionCommand(document?.uri)
-        .join(' ')
-      return pythonPath
-    }
-
-    const configuration = getConfiguration('python', document)
-    if (configuration === null || configuration === undefined) {
-      return defaultPythonPath
-    }
-
-    const value = configuration.get<string>('pythonPath')
-    if (value === null || value === undefined) {
-      return defaultPythonPath
-    }
-
-    return value
-  } catch (error) {
-    return defaultPythonPath
+  const interpreter = await getInterpreterDetails()
+  if (interpreter.path !== undefined) {
+    return interpreter.path[0]
   }
+  return 'python'
 }
 
 /**
@@ -161,7 +144,7 @@ type CommandWithLineImpl = (
 
 /**
  * Takes care of the plumbing so that you can easily add new VS Code commands which depend
- * on the path to the python interpreter, the path to the active file, and the line under the caret.
+ * on the path to the python interpreter, the path to the active file, and the line under the cursor.
  */
 function executeCommandWithLine(
   event: any,
@@ -239,74 +222,86 @@ function executeCommand(
   commandImpl(pythonPath, escapedPath)
 }
 
-function executeCheckCommand(event: any, pythonPath: string) {
-  executeCommand(event, pythonPath, true, (pythonPath, escapedPath) =>
-    executeInRestartedTerminal(
-      'crosshair check',
-      `${pythonPath} -m crosshair check ${escapedPath}`
-    )
-  )
-}
-
-function executeCheckAtCommand(event: any, pythonPath: string) {
+function executeCommandAt(event: any, cmdName: string, pythonPath: string) {
   executeCommandWithLine(
     event,
     pythonPath,
     true,
     (pythonPath, escapedPath, line) =>
       executeInRestartedTerminal(
-        'crosshair check at',
-        `${pythonPath} -m crosshair check ${escapedPath}:${line}`
+        `crosshair ${cmdName} at`,
+        `${pythonPath} -m crosshair ${cmdName} ${escapedPath}:${line}`
       )
   )
 }
 
 function executeWatchCommand(event: any, pythonPath: string) {
-  executeCommand(event, pythonPath, true, (pythonPath, escapedPath) =>
-    executeInRestartedTerminal(
-      'crosshair watch',
-      `${pythonPath} -m crosshair watch ${escapedPath}`
-    )
+  executeCommand(event, pythonPath, true, (pythonPath, escapedPath) => {
+    const opts = getCommandLineArguments().join(' ')
+    const cmd = `${pythonPath} -m crosshair watch ${opts} ${escapedPath}`
+    return executeInRestartedTerminal('crosshair watch', cmd)
+  })
+}
+
+function executeCoverCommand(event: any, pythonPath: string) {
+  executeCommandAt(
+    event,
+    'cover --example_output_format=pytest --per_condition_timeout=5',
+    pythonPath
   )
 }
 
-function executePickCommand(event: any, pythonPath: string) {
+function executePickCommand(event: any) {
   const path: string | null = inferPath(event)
-  if (!path) {
-    vscode.window.showErrorMessage(
-      'Unexpected execution of a pick command when no path could be inferred.'
-    )
-    return
-  }
-
-  const fileName = pathModule.basename(path)
-
   const line: number | null = inferLine()
+  const fileName = path ? pathModule.basename(path) : ''
 
-  // We can not dynamically change editor context menu so we need to use QuickPick,
-  // see https://stackoverflow.com/questions/42586589/build-dynamic-menu-in-vscode-extension
   const quickPick = vscode.window.createQuickPick()
   quickPick.canSelectMany = false
   const items: vscode.QuickPickItem[] = []
 
-  items.push({
-    label: 'check',
-    description: `Crosshair check ${fileName}`,
-  })
-  if (line !== null) {
+  if (localState && localState.lsClient === undefined) {
     items.push({
-      label: 'check at',
-      description: `Crosshair check ${fileName} at line ${line}`,
+      label: 'start',
+      description: `Start CrossHair background watcher`,
+    })
+  } else {
+    items.push({
+      label: 'stop',
+      description: `Stop CrossHair background watcher`,
     })
   }
-
+  if (fileName.endsWith('.py')) {
+    items.push({
+      label: 'watch in terminal',
+      description: `Watch ${fileName} with CrossHair in the terminal`,
+    })
+    if (line !== null) {
+      // items.push({
+      //   label: 'diff behavior',
+      //   description: `Find behavior changes in the function at line ${line}`,
+      // })
+      items.push({
+        label: 'generate tests',
+        description: `Generate tests to cover the function at line ${line}`,
+      })
+    }
+  }
+  if (localState?.outputChannel) {
+    items.push({
+      label: 'show logs',
+      description:
+        'Show the CrossHair background checker logs in the output panel',
+    })
+  }
   items.push({
-    label: 'watch',
-    description: `Crosshair watch ${fileName}`,
+    label: 'help',
+    description: `Open CrossHair's documentation in your browser`,
   })
   quickPick.items = items
 
-  quickPick.onDidAccept((e) => {
+  quickPick.onDidAccept(async (e) => {
+    quickPick.hide()
     switch (quickPick.selectedItems.length) {
       case 0:
         break
@@ -315,14 +310,32 @@ function executePickCommand(event: any, pythonPath: string) {
           const label = quickPick.selectedItems[0].label
 
           switch (label) {
-            case 'check':
-              executeCheckCommand(event, pythonPath)
+            case 'start':
+              if (localState && localState.lsClient === undefined) {
+                await requestServerStart()
+              }
               break
-            case 'check at':
-              executeCheckAtCommand(event, pythonPath)
+            case 'stop':
+              if (localState && localState.lsClient !== undefined) {
+                await requestServerStop()
+              }
               break
-            case 'watch':
-              executeWatchCommand(event, pythonPath)
+            // case 'diff behavior':
+            //   executeCommandAt(event, 'diffbehavior', await inferPythonPath())
+            //   break
+            case 'generate tests':
+              executeCoverCommand(event, await inferPythonPath())
+              break
+            case 'watch in terminal':
+              executeWatchCommand(event, await inferPythonPath())
+              break
+            case 'show logs':
+              localState!.outputChannel.show(true)
+              break
+            case 'help':
+              vscode.env.openExternal(
+                Uri.parse('https://crosshair.readthedocs.io/en/latest/')
+              )
               break
             default:
               vscode.window.showErrorMessage(
@@ -338,44 +351,251 @@ function executePickCommand(event: any, pythonPath: string) {
         )
         break
     }
-    quickPick.hide()
   })
   quickPick.show()
 }
 
-export function activate(context: vscode.ExtensionContext) {
-  inferPythonPath().then((pythonPath) => {
-    context.subscriptions.push(
-      vscode.commands.registerCommand('crosshair-vscode.pick', (event) =>
-        executePickCommand(event, pythonPath)
-      )
-    )
+export async function createServer(
+  interpreter: string[],
+  outputChannel: vscode.OutputChannel
+): Promise<LanguageClient | undefined> {
+  const command = interpreter[0]
+  const serverName = 'CrossHair'
 
-    context.subscriptions.push(
-      vscode.commands.registerCommand('crosshair-vscode.check', (event) =>
-        executeCheckCommand(event, pythonPath)
-      )
+  // Abort if we do not have the required Python dependencies installed:
+  try {
+    const { stderr } = await promisify(execFile)(
+      command,
+      interpreter.slice(1).concat(['-c', 'import crosshair, pygls'])
     )
+    if (stderr !== '') return undefined
+  } catch (e) {
+    return undefined
+  }
 
-    context.subscriptions.push(
-      vscode.commands.registerCommand('crosshair-vscode.check-at', (event) =>
-        executeCheckAtCommand(event, pythonPath)
-      )
-    )
+  const workspaces = vscode.workspace.workspaceFolders ?? []
+  const projectRoot = workspaces[0].uri.fsPath
 
-    context.subscriptions.push(
-      vscode.commands.registerCommand('crosshair-vscode.watch', (event) =>
-        executeWatchCommand(event, pythonPath)
+  const args = ['-m', 'crosshair', 'server'].concat(getCommandLineArguments())
+  outputChannel.appendLine(`Running: ${interpreter.concat(args).join(' ')}`)
+  const serverOptions: ServerOptions = {
+    command,
+    args: interpreter.slice(1).concat(args),
+    options: { cwd: projectRoot },
+  }
+
+  const clientOptions: LanguageClientOptions = {
+    // Register the server for python documents
+    documentSelector: [
+      { scheme: 'file', language: 'python' },
+      { scheme: 'untitled', language: 'python' },
+      { scheme: 'vscode-notebook', language: 'python' },
+      { scheme: 'vscode-notebook-cell', language: 'python' },
+    ],
+    outputChannel,
+    traceOutputChannel: outputChannel,
+    revealOutputChannelOn: RevealOutputChannelOn.Never,
+  }
+
+  return new LanguageClient(
+    serverName,
+    serverName,
+    serverOptions,
+    clientOptions
+  )
+}
+
+export async function requestServerStop() {
+  if (localState) {
+    localState.wantsToRun = false
+    if (localState.lsClient) {
+      await stopServer()
+    }
+  }
+}
+
+export async function requestServerStart() {
+  if (localState) {
+    localState.wantsToRun = true
+    await restartServer(true)
+  }
+}
+
+async function stopServer() {
+  await localState!.setServerStatus('stopping')
+  await localState!.lsClient!.stop()
+  localState!.lsClient = undefined
+  await localState!.setServerStatus('off')
+}
+
+export async function restartServer(showDependencyWarning: boolean = false) {
+  const oldLSClient = localState!.lsClient
+  if (oldLSClient !== undefined) {
+    await stopServer()
+  }
+  const channel = localState!.outputChannel
+  const interpreter = await getInterpreterDetails()
+  if (!interpreter.path) {
+    return
+  }
+  const newLSClient = await createServer(interpreter.path, channel)
+  if (newLSClient === undefined) {
+    channel.appendLine(`Missing Python dependencies - CrossHair will not run.`)
+    channel.appendLine(`Install them with 'pip install crosshair pygls'`)
+    if (showDependencyWarning) {
+      vscode.window.showErrorMessage(
+        "CrossHair dependencies are missing. Install them with 'pip install crosshair pygls'"
       )
+    }
+    return
+  }
+  channel.appendLine(`Server start requested.`)
+  await localState!.setServerStatus('starting')
+  try {
+    await newLSClient.start()
+  } catch (e) {
+    await localState!.setServerStatus('off')
+    return
+  }
+
+  if (localState!.lsClient === undefined) {
+    localState!.lsClient = newLSClient
+    await localState!.setServerStatus('on')
+  } else {
+    // A concurrent start beat us; shut ourself down:
+    channel.appendLine(
+      'client changed underneath during restart; aborting start'
     )
+    await newLSClient.stop()
+  }
+}
+
+class LocalState {
+  statusBarItem: vscode.StatusBarItem
+  outputChannel: vscode.OutputChannel
+  lsClient?: LanguageClient
+  serverStatus: string
+  wantsToRun: boolean
+
+  constructor(
+    statusBarItem: vscode.StatusBarItem,
+    outputChannel: vscode.OutputChannel
+  ) {
+    this.outputChannel = outputChannel
+    this.statusBarItem = statusBarItem
+    this.serverStatus = 'off'
+    this.wantsToRun = vscode.workspace
+      .getConfiguration('crosshair-vscode')
+      .get('autostart') as boolean
+  }
+
+  async setServerStatus(status: string) {
+    this.serverStatus = status
+    await vscode.commands.executeCommand(
+      'setContext',
+      'crosshair-vscode.server-status',
+      status
+    )
+    updateStatusBarItem()
+  }
+}
+
+let localState: LocalState | undefined
+
+export async function activate(context: vscode.ExtensionContext) {
+  const channel = vscode.window.createOutputChannel('CrossHair')
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('crosshair-vscode.start', async (event) => {
+      if (localState && localState.lsClient === undefined) {
+        localState.wantsToRun = true
+        await requestServerStart()
+      }
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('crosshair-vscode.stop', async (event) => {
+      if (localState && localState.lsClient !== undefined) {
+        localState.wantsToRun = false
+        await requestServerStop()
+      }
+    })
+  )
+
+  const statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    105
+  )
+  statusBarItem.command = 'crosshair-vscode.pick'
+  context.subscriptions.push(statusBarItem)
+
+  localState = new LocalState(statusBarItem, channel)
+  updateStatusBarItem()
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('crosshair-vscode.pick', async (event) =>
+      executePickCommand(event)
+    )
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('crosshair-vscode.watch', async (event) =>
+      executeWatchCommand(event, await inferPythonPath())
+    )
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('crosshair-vscode.gentests', async (event) =>
+      executeCoverCommand(event, await inferPythonPath())
+    )
+  )
+
+
+
+  context.subscriptions.push(
+    onDidChangePythonInterpreter(async () => {
+      if (localState && localState.wantsToRun) {
+        channel.appendLine('interpreter change detected - restarting')
+        // There is often an interpreter change near activation; wait a bit to ensure
+        // a server with the final interpreter wins:
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        await restartServer()
+      }
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(
+      async (e: vscode.ConfigurationChangeEvent) => {
+        if (
+          e.affectsConfiguration('crosshair-vscode.contract_kind') &&
+          localState &&
+          localState.wantsToRun
+        ) {
+          await restartServer()
+        }
+      }
+    )
+  )
+
+  return initializePython(context.subscriptions).then(() => {
+    if (localState?.wantsToRun) {
+      return restartServer()
+    }
   })
 }
 
-export function deactivate() {
-  // Intentionally left empty.
-  // See: https://code.visualstudio.com/api/references/vscode-api#ExtensionContext
-  //   subscriptions: {dispose}[]
-  //
-  //   An array to which disposables can be added. When this extension is deactivated
-  //   the disposables will be disposed.
+function updateStatusBarItem() {
+  if (localState?.statusBarItem !== undefined) {
+    const statusBarItem = localState?.statusBarItem
+    statusBarItem.text = `CH ${localState?.serverStatus}`
+    statusBarItem.show()
+  }
+}
+
+export async function deactivate() {
+  if (localState && localState.lsClient) {
+    await stopServer()
+  }
 }
