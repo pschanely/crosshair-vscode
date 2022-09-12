@@ -9,6 +9,7 @@
 		"url": "https://github.com/pschanely/crosshair-vscode"
 	},
 	"homepage": "https://github.com/pschanely/crosshair-vscode",
+	"icon": "readme/logo_gray.png",
 	"author": {
 		"name": "Marko Ristin",
 		"email": "marko@ristin.ch"

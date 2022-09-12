@@ -24,7 +24,7 @@ pip3 install crosshair-tool
 [crosshair-tool][crosshair-tool] must be installed in each Python environment that you wish to use. (the environment is displayed and can be changed in the status bar)
 
 **crosshair-vscode**.
-Use the Visual Studio marketplace to install the extension ms-python.python by
+Use the Visual Studio marketplace to install the extension by
 following [this link][crosshair-vscode].
 
 [vscode]: https://code.visualstudio.com/
