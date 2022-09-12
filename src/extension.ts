@@ -546,12 +546,11 @@ export async function activate(context: vscode.ExtensionContext) {
   )
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('crosshair-vscode.gentests', async (event) =>
-      executeCoverCommand(event, await inferPythonPath())
+    vscode.commands.registerCommand(
+      'crosshair-vscode.gentests',
+      async (event) => executeCoverCommand(event, await inferPythonPath())
     )
   )
-
-
 
   context.subscriptions.push(
     onDidChangePythonInterpreter(async () => {
