@@ -2,6 +2,10 @@
 
 ![Build-and-lint](https://github.com/mristin/icontract-hypothesis-vscode/workflows/Build-and-lint/badge.svg)
 
+> ❗ **IMPORTANT** ❗ \
+> **This extension was migrated to a new publisher. Please uninstall it and install [the new extension](https://marketplace.visualstudio.com/items?itemName=CrossHair.crosshair) instead.**
+
+
 Crosshair-vscode is an extension for [Visual Studio Code (VS Code)][vscode] that
 allows you to statically test your Python code using [CrossHair][crosshair-tool].
 

@@ -1,8 +1,8 @@
 {
 	"name": "crosshair-vscode",
-	"displayName": "crosshair-vscode",
+	"displayName": "[DEPRECATED] crosshair-vscode",
 	"description": "Use crosshair to statically analyze Python code from within VS Code.",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
