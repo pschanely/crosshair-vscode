@@ -103,7 +103,7 @@ We follow a bit unusual semantic versioning schema:
 
 * X is the oldest supported major version of
   [crosshair-tool],
-* Y is the minor version (new or modified features), and
+* Y is the minor version (odd numbers are pre-release versions), and
 * Z is the patch version (only bug fixes).
 
 ## Release Notes
@@ -117,3 +117,8 @@ Initial release of crosshair-vscode.
 CrossHair now runs transparently in the background and highlights counterexamples directly in your code, just like a typechecker or linter would.
 You can stop or start CrossHair in the status bar.
 Some of the more specialized check commands have been removed, as background execution is the recommended way to use CrossHair.
+
+### 0.2.0
+
+A non-pre-release release of 0.0.2; there are no changes.
+(We're moving to the VSCode recommendation of using even minor version numbers for release versions)
