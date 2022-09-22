@@ -1,5 +1,10 @@
 # crosshair-vscode
 
+> ❗ **IMPORTANT** ❗ \
+> **This extension was migrated from the publisher `mristin` to a new publisher, `crosshair`. Please uninstall this extension and install [the new extension] instead.**
+
+[the new extension]: https://marketplace.visualstudio.com/items?itemName=CrossHair.crosshair
+
 Crosshair-vscode is an extension for [Visual Studio Code (VS Code)][vscode] that
 allows you to statically test your Python code using [CrossHair][crosshair-tool].
 

@@ -578,6 +578,28 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   )
 
+  const updateNowItem = { title: 'Upgrade now' }
+  vscode.window
+    .showWarningMessage(
+      'The extension was migrated from the publisher mristin ' +
+      'to a new publisher, crosshair. Please upgrade now.',
+      updateNowItem
+    )
+    .then(async (value) => {
+      if (value === updateNowItem) {
+        await vscode.commands.executeCommand(
+          'workbench.extensions.uninstallExtension',
+          'mristin.crosshair-vscode'
+        )
+        await vscode.commands.executeCommand(
+          'workbench.extensions.installExtension',
+          'crosshair.crosshair',
+          { installPreReleaseVersion: true }
+        )
+        await vscode.commands.executeCommand('workbench.action.reloadWindow')
+      }
+    })
+
   return initializePython(context.subscriptions).then(() => {
     if (localState?.wantsToRun) {
       return restartServer()
