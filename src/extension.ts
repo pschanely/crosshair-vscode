@@ -595,6 +595,6 @@ function updateStatusBarItem() {
 
 export async function deactivate() {
   if (localState && localState.lsClient) {
-    await stopServer()
+    await localState!.lsClient!.stop()
   }
 }

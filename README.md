@@ -8,20 +8,20 @@ allows you to statically test your Python code using [CrossHair][crosshair-tool]
 Crosshair-vscode has two dependencies:
 * The Python extension [ms-python.python][ms-python.python] for
   [VS Code][vscode], and
-* The Python package [crosshair-tool][crosshair-tool].
+* The Python packages [crosshair-tool][crosshair-tool] and [pygls][pygls].
 
 **ms-python.python**.
 Use the Visual Studio marketplace to install the extension ms-python.python by
 following [this link][ms-python.python].
 
-**crosshair-tool**. The easiest way to install the package
-[crosshair-tool][crosshair-tool] is to open the terminal tab and run pip3:
+**crosshair-tool**. The easiest way to install the
+[crosshair-tool][crosshair-tool] and [pygls][pygls] packages is to open the terminal tab and run pip3:
 
 ```
-pip3 install crosshair-tool
+pip3 install crosshair-tool pygls
 ```
 
-[crosshair-tool][crosshair-tool] must be installed in each Python environment that you wish to use. (the environment is displayed and can be changed in the status bar)
+These packages must be installed in each Python environment that you wish to use. (the environment is displayed and can be changed in the status bar)
 
 **crosshair-vscode**.
 Use the Visual Studio marketplace to install the extension by
@@ -30,6 +30,7 @@ following [this link][crosshair-vscode].
 [vscode]: https://code.visualstudio.com/
 [ms-python.python]: https://marketplace.visualstudio.com/items?itemName=ms-python.python
 [crosshair-tool]: https://pypi.org/project/crosshair-tool/
+[pygls]: https://pypi.org/project/pygls/
 [venv]: https://docs.python.org/3/tutorial/venv.html
 [vscode-venv]: https://code.visualstudio.com/docs/python/environments
 [crosshair-vscode]: https://marketplace.visualstudio.com/items?itemName=CrossHair.crosshair
@@ -122,3 +123,7 @@ Some of the more specialized check commands have been removed, as background exe
 
 A non-pre-release release of 0.0.2; there are no changes.
 (We're moving to the VSCode recommendation of using even minor version numbers for release versions)
+
+### 0.2.1
+
+Removes the possibility for leaked CrossHair workers when closing the editor window without explicitly stopping the background runner.
